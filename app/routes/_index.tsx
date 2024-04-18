@@ -1,41 +1,30 @@
-import type { MetaFunction } from "@remix-run/node";
 
-export const meta: MetaFunction = () => {
-  return [
-    { title: "New Remix App" },
-    { name: "description", content: "Welcome to Remix!" },
-  ];
-};
+import { defer } from '@remix-run/node'
+import { Await, useLoaderData } from '@remix-run/react'
+import { Suspense } from 'react'
 
-export default function Index() {
-  return (
-    <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
-    </div>
-  );
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms))
+const getData = async () => {
+  await delay(3000)
+  return 'Hello World'
 }
+
+export async function loader() {
+  return defer({ message: getData() })
+}
+
+const DeferredComponent = () => {
+  const data = useLoaderData<typeof loader>()
+  return (
+      <div>
+        This will always show.
+        <Suspense fallback={<p>Loading hello world...</p>}>
+          <Await resolve={data.message} errorElement={<p>Error loading message</p>}>
+            {message => <p>This is your message: {message}</p>}
+          </Await>
+        </Suspense>
+      </div>
+  )
+}
+
+export default DeferredComponent
